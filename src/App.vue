@@ -7,11 +7,15 @@
   Tenzor-Typer
   
   <mu-button v-if="this.$route.name!='login'" flat slot="right"
-  @click="jumpHandler('history')">
+  >
           <mu-icon value="account_circle"></mu-icon>
-          _{{this.GLOBAL.userName}}
+          _{{userName}}
   </mu-button>
-  <mu-button v-if="this.$route.name!='login'" flat slot="right"
+  <mu-button flat slot="right" v-if="this.$route.name!='login'"
+  @click="openModUser =true">
+        更改信息
+  </mu-button>
+  <mu-button flat slot="right"
   @click="logoutHandler">
         注销
   </mu-button>
@@ -30,21 +34,36 @@
       </mu-list-item>
     </mu-list>
   </mu-drawer>
+
+  <mu-dialog title="更改信息?" width="400" max-width="40%" :esc-press-close="false" :overlay-close="false" :open.sync="openModUser">
+    <mu-text-field full-width v-model="newname" label="新的用户名" prefix="$" label-float ></mu-text-field><br/>
+    <mu-text-field full-width v-model="newPwd" label="新的密码" :action-icon="visibility ? 'visibility_off' : 'visibility'" :action-click="() => (visibility = !visibility)" :type="visibility ? 'text' : 'password'"></mu-text-field><br/>
+    <mu-button  slot="actions" flat color="primary" @click="openModUser=false">CANCEL</mu-button>
+    <mu-button  slot="actions" flat color="primary" @click="modUser">SUBMIT</mu-button>
+  </mu-dialog>
+
+
   <router-view/>
   </div>
 </template>
 
 <script>
-import {logout} from './apis/type.js'
+import {logout,modUser} from './apis/type.js'
 export default {
   data(){
     return{
+      visibility:false,
+      newname:'',
+      newPwd:'',
       docked: false,
       open: false,
+      openModUser:false,
+      recalc:false,
     }
   },
   methods:{
    jumpHandler(tp){
+      this.open =false;
       if(this.$route.name==tp){
         return;
       }
@@ -54,10 +73,57 @@ export default {
         try{
           const response = await logout();
           console.log(response);
+          if(response.status==200){
+            if(response.data.success ==true){
+              this.$toast.success("注销成功");
+              this.$router.push('/login')
+              sessionStorage.clear();
+            }else{
+              this.$toast.error(response.data.error); 
+            }
+          }else{
+            this.$toast.error("注销失败"); 
+          }
         }catch(error){
           console.log(error)
         }
     },
+    async modUser(){
+      try{
+         if(this.GLOBAL.isEmpty(this.userName)){
+         this.$toast.warning("用户名不能为空");
+          return;
+       }
+       if(this.GLOBAL.isEmpty(this.password)){
+         this.$toast.warning("密码不能为空");
+         return;
+       }
+        const response =await modUser(sessionStorage.getItem('userId'),this.newname,this.newPwd);
+        console.log(response);
+        sessionStorage.setItem('userName',this.newname);
+        this.recalc = !this.recalc
+        if(response.data.success == true){
+          this.$toast.success("修改成功");   
+
+        }else{
+          this.$$toast.error("修改失败")
+        }
+         this.openModUser =false;
+      }catch(err){
+        console.log(err);
+         this.$toast.success("修改失败");
+         this.openModUser =false;
+      }
+    }
+  },
+  computed:{
+    userName(){
+        if(this.recalc){
+          return sessionStorage.getItem('userName')
+          }else{
+            return sessionStorage.getItem('userName')
+        }
+    }
   }
 }
 </script>

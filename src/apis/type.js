@@ -7,17 +7,21 @@ import request from './request.js'
  * @param {number} page
  * @param {number} limit 
  *  */
-export function getList(params){
+export function getList(type,page){
   return request({
     url:'/api/passage',
     method:'get',
-    params:params
+    params:{
+      type,
+      page,
+      limit:6
+    }
   })
 }
 //获取内容
 export function getContent(id){
   return request({
-    url:'/api/passage',
+    url:'/api/passage/content',
     method:'get',
     params:{
       id
@@ -77,9 +81,9 @@ export function modUser(id,name,password){
  * @param {number} userId
  */
 //上传本次打谱记录
-export function addrecord(passageId,userId,number){
+export function addrecord(passageId,userId,wpm){
   return request({
-    url:'/api/user',
+    url:'/api/record',
     method:'put',
     data:{
       passageId,
@@ -88,24 +92,21 @@ export function addrecord(passageId,userId,number){
     }
   })
 }
-export function getrecord(userId,page,limit){
+export function getrecord(userId,page){
   return request({
       url:'/api/record',
       method:'get',
       params:{
         userId,
         page,
-        limit
+        limit:1900
       }
   })
 }
 //无耻的修改记录 
 export function delrecord(recordId){
   return request({
-    url:'/api/record',
+    url:`/api/record/${recordId}`,
     method:'delete',
-    params:{
-      recordId
-    }
   })
 }

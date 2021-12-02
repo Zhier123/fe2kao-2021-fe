@@ -1,6 +1,6 @@
 <script>
-const userName='Aliu'
-const userId=1
+const userName=''
+const userId=null
 function isEmpty(str){
   if(str==''){
     return true;

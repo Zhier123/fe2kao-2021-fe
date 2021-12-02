@@ -12,7 +12,7 @@ const routes = [
     redirect:'/login'
   },
  {
-    path:'/main',
+    path:'/main/:id',
     name:'main',
     component: main
   },{

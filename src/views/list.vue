@@ -12,59 +12,80 @@
       </mu-chip>
     </div>
      <mu-linear-progress :color="passage.type=='hard'?'red':'green'"></mu-linear-progress>
-    <mu-button slot="action" flat color="primary">PLAY</mu-button>
+    <mu-button slot="action" flat color="primary" @click="PLAY(passage.id)">PLAY</mu-button>
   </mu-expansion-panel>
    <mu-flex justify-content="center" style="margin: 32px 0;">
-    <mu-pagination color="blueGrey700" circle :total="1000" :current.sync="current"></mu-pagination>
+    <mu-pagination 
+    color="blueGrey700" 
+    circle 
+    :total="total"
+    :page-size="6"
+    :current.sync="current"
+    @change="pageChangeHandler"></mu-pagination>
   </mu-flex>
   </mu-container>
 
 </template>
 <script>
+import {getList} from '../apis/type.js'
 export default {
+  async mounted(){
+    if(sessionStorage.getItem('userId') == null){
+      this.$toast.error("请先登录");
+      this.$router.push('/login');
+    }
+    var that = this;
+    try{
+      const response = await getList('easy',1);
+      console.log(response);
+      const list = response.data.data.passages;
+      that.total = response.data.data.total;
+      list.map((item)=>{
+        that.passages.push(item);
+      })
+    }catch(err){
+      console.log(err)
+    }
+  },
   data(){
     return{
+      total:0,
       current:1,
-      panel: '',
-      userName:this.GLOBAL.userName,
-      userId:this.GLOBAL.userId,
+      type:'easy',
+      panel: '',  
       passages:[
-        {
-          id:1,
-          title:'HelloWord',
-          type:'hard',
-        },
-        {
-          id:2,
-          title:'dndn',
-          type:'easy',
-        },
-        {
-          id:3,
-          title:'veibae',
-          type:'hard',
-        },
-        {
-          id:4,
-          title:'HelloWord',
-          type:'hard',
-        },
-        {
-          id:5,
-          title:'dndn',
-          type:'easy',
-        },
-        {
-          id:6,
-          title:'veibae',
-          type:'hard',
-        },
+       
       ]
     }
   },
   methods:{
       toggle (panel) {
         this.panel = panel === this.panel ? '' : panel;
+      },
+async pageChangeHandler(){
+        console.log(this.current);
+        try{
+          const response =await getList(this.type,this.current);
+          console.log(response)
+          if(response.data.success ==true){
+            this.passages.splice(0,this.passages.length);
+            const list = response.data.data.passages;
+            this.total = response.data.data.total;
+            list.map((item)=>{
+            this.passages.push(item);
+            })
+          }
+        }catch(err){
+          console.log(err)
+        }
+      },
+      PLAY(id){
+        this.$router.push(`/main/${id}`)
+      }
+  },
+  computed:{
+     pageNum(){
+        return Math.floor(this.total/6)+1;
       }
   }
 }
